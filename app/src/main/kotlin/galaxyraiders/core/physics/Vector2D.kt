@@ -3,6 +3,7 @@ package galaxyraiders.core.physics
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@Suppress("TooManyFunctions", "MagicNumber")
 @JsonIgnoreProperties("unit", "normal", "degree", "magnitude")
 data class Vector2D(val dx: Double, val dy: Double) {
   override fun toString(): String {
@@ -23,11 +24,19 @@ data class Vector2D(val dx: Double, val dy: Double) {
 
   val normal: Vector2D
     get() {
-     val x : Double = -(this.dy / this.dx)
-     val resultV : Vector2D =  Vector2D(x / Math.sqrt((x * x) + 1), 1 / Math.sqrt((x * x) + 1))
-     if ((this.dx > 0 && this.dy > 0) || (this.dx > 0 && this.dy < 0)) return resultV.unaryMinus()
-     else return resultV
+      val x: Double = -(this.dy / this.dx)
+      val resultV: Vector2D = Vector2D(x / Math.sqrt((x * x) + 1), 1 / Math.sqrt((x * x) + 1))
+      if (this.isInFirstQuadrant() || this.isInFourthQuadrant()) return resultV.unaryMinus()
+      else return resultV
     }
+
+  fun isInFirstQuadrant(): Boolean {
+    return this.dx > 0 && this.dy > 0
+  }
+
+  fun isInFourthQuadrant(): Boolean {
+    return this.dx > 0 && this.dy < 0
+  }
 
   operator fun times(scalar: Double): Vector2D {
     return Vector2D(dx * scalar, dy * scalar)

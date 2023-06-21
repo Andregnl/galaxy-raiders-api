@@ -1,5 +1,6 @@
 package galaxyraiders.core.game
 
+import galaxyraiders.core.physics.Point2D
 import galaxyraiders.helpers.AverageValueGeneratorStub
 import galaxyraiders.helpers.ControllerSpy
 import galaxyraiders.helpers.MaxValueGeneratorStub
@@ -86,6 +87,41 @@ class GameEngineTest {
     normalGame.processPlayerInput()
 
     assertEquals(0, controllerSpy.playerCommands.size)
+  }
+
+  @Test
+  fun `It can spawn explosions`() {
+    normalGame.field.generateExplosion(Point2D(1.0, 1.0), 1.0)
+
+    assertNotEquals(normalGame.field.explosions, emptyList())
+    normalGame.field.resetExplosions()
+  }
+
+  @Test
+  fun `Spawned explosions don't move`() {
+    val spawnPosition = Point2D(1.0, 1.0)
+    normalGame.field.generateExplosion(spawnPosition, 1.0)
+
+    val expl = normalGame.field.explosions.last()
+
+    normalGame.moveSpaceObjects()
+
+    assertEquals(expl.center, spawnPosition)
+    normalGame.field.resetExplosions()
+  }
+
+  @Test
+  fun `Explosions disappear after set time`() {
+    val spawnPosition = Point2D(1.0, 1.0)
+    normalGame.field.generateExplosion(spawnPosition, 1.0)
+    val expl = normalGame.field.explosions.last()
+
+    repeat(expl.getMaxTickDuration()) {
+      normalGame.tick()
+    }
+
+    assertEquals(emptyList(), normalGame.field.explosions)
+    normalGame.field.resetExplosions()
   }
 
   @Test

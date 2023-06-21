@@ -1,5 +1,6 @@
 package galaxyraiders.core.physics
 
+@Suppress("TooManyFunctions")
 open class Object2D(
   initialPosition: Point2D,
   initialVelocity: Vector2D,
@@ -11,6 +12,13 @@ open class Object2D(
 
   var velocity: Vector2D = initialVelocity
     protected set
+
+  var shouldBeDestroyed: Boolean = false
+    protected set
+
+  fun markForDestruction() {
+    shouldBeDestroyed = true
+  }
 
   fun move() {
     this.center += this.velocity
