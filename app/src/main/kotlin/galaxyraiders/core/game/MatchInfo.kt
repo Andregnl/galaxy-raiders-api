@@ -1,14 +1,15 @@
 package galaxyraiders.core.game
 
-import java.time.LocalDateTime
+@Suppress("ReturnCount")
+data class MatchInfo(
+  var startTime: String,
+  var finalScore: Int,
+  var destroyedAsteroids: Int
+) : Comparable<MatchInfo> {
 
-data class MatchInfo(var startTime: String,
-										 var finalScore: Int,
-										 var destroyedAsteroids: Int): Comparable<MatchInfo> {
-
-	override fun compareTo(other: MatchInfo): Int {
-		if (this.finalScore > other.finalScore) return 1
-		else if (this.finalScore < other.finalScore) return -1
-		else return 0
-	}
+  override fun compareTo(other: MatchInfo): Int {
+    if (this.finalScore > other.finalScore) return 1
+    else if (this.finalScore < other.finalScore) return -1
+    else return 0
+  }
 }

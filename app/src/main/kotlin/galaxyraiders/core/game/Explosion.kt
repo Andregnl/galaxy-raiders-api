@@ -3,16 +3,17 @@ package galaxyraiders.core.game
 import galaxyraiders.core.physics.Point2D
 import galaxyraiders.core.physics.Vector2D
 
+const val EXPLOSION_MAX_TICK_DURATION: Int = 10
+
 class Explosion(initialPosition: Point2D, radius: Double) :
   SpaceObject("Explosion", 'E', initialPosition, Vector2D(0.0, 0.0), radius, 0.0) {
-  val explosionMaxTickDuration: Int = 10
   var currentTickDuration: Int = 1
   var canBeDestroyed: Boolean = false
 
   fun increaseTickDuration() {
     currentTickDuration++
 
-    if (currentTickDuration >= explosionMaxTickDuration)
+    if (currentTickDuration >= EXPLOSION_MAX_TICK_DURATION)
       canBeDestroyed = true
   }
 
@@ -21,6 +22,6 @@ class Explosion(initialPosition: Point2D, radius: Double) :
   }
 
   fun getMaxTickDuration(): Int {
-    return explosionMaxTickDuration
+    return EXPLOSION_MAX_TICK_DURATION
   }
 }
