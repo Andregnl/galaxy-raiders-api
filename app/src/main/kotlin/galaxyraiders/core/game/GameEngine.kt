@@ -6,6 +6,11 @@ import galaxyraiders.ports.ui.Controller
 import galaxyraiders.ports.ui.Controller.PlayerCommand
 import galaxyraiders.ports.ui.Visualizer
 import kotlin.system.measureTimeMillis
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import java.io.File
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 const val MILLISECONDS_PER_SECOND: Int = 1000
 
@@ -22,7 +27,7 @@ object GameEngineConfig {
 }
 
 @Suppress("TooManyFunctions")
-class GameEngine(
+open class GameEngine(
   val generator: RandomGenerator,
   val controller: Controller,
   val visualizer: Visualizer,
@@ -34,6 +39,79 @@ class GameEngine(
   )
 
   var playing = true
+
+	protected var destroyedAsteroids: Int = 0
+	protected var scoredPoints: Int = 0
+
+	var leaderboardObj: ArrayList<MatchInfo> = ArrayList<MatchInfo>()
+	var scoreboardObj: ArrayList<MatchInfo> = ArrayList<MatchInfo>()
+	val mapper = jacksonObjectMapper()
+
+	var startTime: String = ""
+	val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+
+	init {
+		val (scoreboardFile, leaderboardFile) = getScoreAndLeaderboardFile()
+
+		getInitialSaveData(leaderboardFile, scoreboardFile)
+	}
+
+	public fun saveData() {
+		putNewScoreboardInfo()
+		putNewLeaderboardInfo()
+		writeSaveData()
+	}
+
+	public fun setStartTime() {
+		val time = LocalDateTime.now()
+		startTime = time.format(timeFormatter)
+	}
+
+	open fun getScoreAndLeaderboardFile(): Pair<File, File> {
+		val leaderboardFilename = "/src/main/kotlin/galaxyraiders/core/score/Leaderboard.json"
+		val scoreboardFilename = "/src/main/kotlin/galaxyraiders/core/score/Scoreboard.json"
+		val leaderboardFile = File(System.getProperty("user.dir"), leaderboardFilename)
+		val scoreboardFile = File(System.getProperty("user.dir"), scoreboardFilename)
+
+		return Pair(scoreboardFile, leaderboardFile)
+	}
+
+	fun putNewScoreboardInfo() {
+		val newEntry = MatchInfo(startTime, scoredPoints, destroyedAsteroids)
+		scoreboardObj.add(newEntry)
+	}
+
+	fun putNewLeaderboardInfo() {
+		val newEntry = MatchInfo(startTime, scoredPoints, destroyedAsteroids)
+		leaderboardObj.add(newEntry)
+		leaderboardObj = ArrayList(leaderboardObj.sorted())
+
+		if (leaderboardObj.size > 3) leaderboardObj = ArrayList(leaderboardObj.take(3))
+	}
+
+	fun writeSaveData() {
+		val scoreboardString = mapper.writeValueAsString(scoreboardObj)
+		val leaderboardString = mapper.writeValueAsString(leaderboardObj)
+
+		val (scoreboardFile, leaderboardFile) = getScoreAndLeaderboardFile()
+		scoreboardFile.writeText(scoreboardString)
+		leaderboardFile.writeText(leaderboardString)
+	}
+
+	fun getInitialSaveData(leaderboardFile: File, scoreboardFile: File) {
+		if (!leaderboardFile.exists()) leaderboardFile.writeText("")
+		else if (leaderboardFile.readText() == "") {
+			val leaderboardText = leaderboardFile.readText(Charsets.UTF_8)
+			if (leaderboardText != "")
+				leaderboardObj = mapper.readValue<ArrayList<MatchInfo>>(leaderboardText)
+		}
+		if (!scoreboardFile.exists()) scoreboardFile.writeText("")
+		else {
+			val scoreboardText = scoreboardFile.readText(Charsets.UTF_8)
+			if (scoreboardText != "")
+				scoreboardObj = mapper.readValue<ArrayList<MatchInfo>>(scoreboardText)
+		}
+	}
 
   fun execute() {
     while (true) {
@@ -98,6 +176,8 @@ class GameEngine(
           m.markForDestruction()
           a.markForDestruction()
           this.field.generateExplosion(a.center, a.radius)
+					scoredPoints += a.calculatePoints()
+					destroyedAsteroids++
         }
       }
     }

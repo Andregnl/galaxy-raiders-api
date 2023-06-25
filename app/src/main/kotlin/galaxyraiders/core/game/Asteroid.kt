@@ -9,8 +9,8 @@ class Asteroid(
   radius: Double,
   mass: Double
 ) :
-  SpaceObject("Asteroid", '.', initialPosition, initialVelocity, radius, mass) {
-  fun spawnExplosion(): Explosion {
-    return Explosion(this.center, this.radius)
-  }
+		SpaceObject("Asteroid", '.', initialPosition, initialVelocity, radius, mass) {
+	fun calculatePoints(): Int {
+		return Math.round(radius * mass) as Int
+	}
 }

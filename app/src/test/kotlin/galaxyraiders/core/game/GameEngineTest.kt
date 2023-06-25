@@ -1,11 +1,14 @@
 package galaxyraiders.core.game
 
+import kotlin.random.Random
+import galaxyraiders.adapters.BasicRandomGenerator
 import galaxyraiders.core.physics.Point2D
 import galaxyraiders.helpers.AverageValueGeneratorStub
 import galaxyraiders.helpers.ControllerSpy
 import galaxyraiders.helpers.MaxValueGeneratorStub
 import galaxyraiders.helpers.MinValueGeneratorStub
 import galaxyraiders.helpers.VisualizerSpy
+import galaxyraiders.helpers.GameEngineScoreMan
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
@@ -13,6 +16,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @DisplayName("Given a game engine")
 class GameEngineTest {
@@ -28,6 +33,12 @@ class GameEngineTest {
     visualizer = visualizerSpy,
   )
 
+	private val normalGameWithScoreManipulation = GameEngineScoreMan(
+		gen = avgGenerator,
+		con = controllerSpy,
+		vis = visualizerSpy,
+	)
+
   private val easyGame = GameEngine(
     generator = maxGenerator,
     controller = controllerSpy,
@@ -39,6 +50,8 @@ class GameEngineTest {
     controller = controllerSpy,
     visualizer = visualizerSpy,
   )
+
+	val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 
   @Test
   fun `it has its parameters initialized correctly `() {
@@ -124,6 +137,76 @@ class GameEngineTest {
     normalGame.field.resetExplosions()
   }
 
+	@Test
+	fun `It creates Scoreboard and Leaderboard files`() {
+		normalGameWithScoreManipulation.deleteTestBoardFiles()
+		normalGameWithScoreManipulation.triggerGameEngineBeginGame()
+		val pairSaveFiles: Pair<String, String> = normalGameWithScoreManipulation.getScoreAndLeaderboardTexts()
+
+		assertEquals(Pair<String, String>("", ""), pairSaveFiles)
+		normalGameWithScoreManipulation.deleteTestBoardFiles()
+	}
+
+	@Test
+	fun `It creates Scoreboard and Leaderboard files with one entry`() {
+		normalGameWithScoreManipulation.deleteTestBoardFiles()
+		val currentTime = LocalDateTime.now()
+		val currentTimeString = currentTime.format(timeFormatter)
+		normalGameWithScoreManipulation.triggerGameEngineBeginGame()
+		normalGameWithScoreManipulation.setFinalScore(100)
+		normalGameWithScoreManipulation.setAsteroidsDestroyed(10)
+		normalGameWithScoreManipulation.triggerGameEngineEndGame()
+
+		val expectedResult: ArrayList<MatchInfo> = arrayListOf(MatchInfo(currentTimeString, 100, 10))
+
+		val (scoreObj, leaderObj) = normalGameWithScoreManipulation.getScoreAndLeaderboardObjs()
+
+		assertAll(
+							"MatchInfo objects should be the same",
+							{ assertEquals(expectedResult, scoreObj as ArrayList<MatchInfo>) },
+							{ assertEquals(expectedResult, leaderObj as ArrayList<MatchInfo>) },
+		)
+		normalGameWithScoreManipulation.deleteTestBoardFiles()
+	}
+
+	@Test
+	fun `The scores in Leaderboard should not exceed 3`() {
+		normalGameWithScoreManipulation.deleteTestBoardFiles()
+
+		repeat(5) {
+			normalGameWithScoreManipulation.triggerGameEngineBeginGame()
+			normalGameWithScoreManipulation.setFinalScore(100)
+			normalGameWithScoreManipulation.setAsteroidsDestroyed(10)
+			normalGameWithScoreManipulation.triggerGameEngineEndGame()
+		}
+
+		val (_, leaderObj) = normalGameWithScoreManipulation.getScoreAndLeaderboardObjs()
+
+		assertEquals(3, leaderObj.size)
+		normalGameWithScoreManipulation.deleteTestBoardFiles()
+	}
+
+	@Test
+	fun `The scores in Leaderboard should be ordered`() {
+		normalGameWithScoreManipulation.deleteTestBoardFiles()
+		val randomGenerator: BasicRandomGenerator = BasicRandomGenerator(Random(seed = 10))
+
+		for(i in 1..5) {
+			normalGameWithScoreManipulation.triggerGameEngineBeginGame()
+			normalGameWithScoreManipulation.setFinalScore(randomGenerator.generateIntegerInRange(0, 100))
+			normalGameWithScoreManipulation.setAsteroidsDestroyed(randomGenerator.generateIntegerInRange(0, 100))
+			normalGameWithScoreManipulation.triggerGameEngineEndGame()
+		}
+
+		val (_, leaderObj) = normalGameWithScoreManipulation.getScoreAndLeaderboardObjs()
+		assertAll(
+				"leaderboard is ordered",
+				{leaderObj[0].finalScore > leaderObj[1].finalScore},
+				{leaderObj[1].finalScore > leaderObj[2].finalScore},
+		)
+		normalGameWithScoreManipulation.deleteTestBoardFiles()
+	}
+
   @Test
   fun `it updates its space objects while playing`() {
     val numAsteroids = hardGame.field.asteroids.size
@@ -179,7 +262,7 @@ class GameEngineTest {
     hardGame.moveSpaceObjects()
 
     assertAll(
-      "GameEngine should move all space objects",
+			"GameEngine should move all space objects",
       { assertEquals(expectedShipPosition, ship.center) },
       { assertEquals(expectedAsteroidPosition, asteroid.center) },
       { assertEquals(expectedMissilePosition, missile.center) },

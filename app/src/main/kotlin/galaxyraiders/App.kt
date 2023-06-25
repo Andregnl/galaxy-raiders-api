@@ -31,7 +31,10 @@ fun main() {
     generator, controller, visualizer
   )
 
+	gameEngine.setStartTime()
   thread { gameEngine.execute() }
 
   ui.start()
+
+	gameEngine.saveData()
 }
