@@ -5,6 +5,8 @@ services:
     build:
       context: .
       target: "runner"
+    volumes:
+      - "./:/home/gradle/galaxy-raiders/"
     ports:
       - "5000:5000"
     profiles:

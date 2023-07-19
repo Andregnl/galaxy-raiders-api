@@ -54,9 +54,15 @@ FROM eclipse-temurin:17-jdk AS runner
 # Reuse default docker build args
 ARG APP_DIR=/home/gradle/galaxy-raiders
 
+# Change default workdir
+WORKDIR ${APP_DIR}
+
+RUN useradd -m p
+USER p
+
 # Copy runtime from image
 COPY --from=builder ${APP_DIR}/app/build/libs/galaxy-raiders.jar \
                     /bin/runner/galaxy-raiders.jar
 
 # Run uber JAR to start application
-CMD ["java", "-jar", "galaxy-raiders.jar"]
+CMD ["java", "-jar", "/bin/runner/galaxy-raiders.jar"]

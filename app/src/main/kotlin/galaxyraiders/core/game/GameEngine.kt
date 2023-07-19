@@ -68,11 +68,11 @@ open class GameEngine(
     startTime = time.format(timeFormatter)
   }
 
-  open fun getScoreAndLeaderboardFile(): Pair<File, File> {
-    val leaderboardFilename = "/src/main/kotlin/galaxyraiders/core/score/Leaderboard.json"
-    val scoreboardFilename = "/src/main/kotlin/galaxyraiders/core/score/Scoreboard.json"
-    val leaderboardFile = File(System.getProperty("user.dir"), leaderboardFilename)
-    val scoreboardFile = File(System.getProperty("user.dir"), scoreboardFilename)
+	open fun getScoreAndLeaderboardFile(): Pair<File, File> {
+		val leaderboardFilename = "/src/main/kotlin/galaxyraiders/core/score/Leaderboard.json"
+		val scoreboardFilename = "/src/main/kotlin/galaxyraiders/core/score/Scoreboard.json"
+		val leaderboardFile = File("/home/gradle/galaxy-raiders/app/", leaderboardFilename)
+		val scoreboardFile = File("/home/gradle/galaxy-raiders/app/", scoreboardFilename)
 
     return Pair(scoreboardFile, leaderboardFile)
   }
@@ -100,20 +100,21 @@ open class GameEngine(
     leaderboardFile.writeText(leaderboardString)
   }
 
-  fun getInitialSaveData(leaderboardFile: File, scoreboardFile: File) {
-    if (!leaderboardFile.exists()) leaderboardFile.writeText("")
-    else if (leaderboardFile.readText() == "") {
-      val leaderboardText = leaderboardFile.readText(Charsets.UTF_8)
-      if (leaderboardText != "")
-        leaderboardObj = mapper.readValue<ArrayList<MatchInfo>>(leaderboardText)
-    }
-    if (!scoreboardFile.exists()) scoreboardFile.writeText("")
-    else {
-      val scoreboardText = scoreboardFile.readText(Charsets.UTF_8)
-      if (scoreboardText != "")
-        scoreboardObj = mapper.readValue<ArrayList<MatchInfo>>(scoreboardText)
-    }
-  }
+	fun getInitialSaveData(leaderboardFile: File, scoreboardFile: File) {
+		if (!leaderboardFile.exists()) leaderboardFile.createNewFile()
+		else {
+			val leaderboardText = leaderboardFile.readText(Charsets.UTF_8)
+			if (leaderboardText != "")
+				leaderboardObj = mapper.readValue<ArrayList<MatchInfo>>(leaderboardText)
+		}
+
+		if (!scoreboardFile.exists()) scoreboardFile.createNewFile()
+		else {
+			val scoreboardText = scoreboardFile.readText(Charsets.UTF_8)
+			if (scoreboardText != "")
+				scoreboardObj = mapper.readValue<ArrayList<MatchInfo>>(scoreboardText)
+		}
+	}
 
   fun execute() {
     while (true) {
