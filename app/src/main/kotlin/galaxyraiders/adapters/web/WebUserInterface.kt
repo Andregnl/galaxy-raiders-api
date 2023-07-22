@@ -20,9 +20,10 @@ object WebUserInterfaceConfig {
 class WebUserInterface : UserInterface {
   private val controller = SpaceShipRouter()
   private val visualizer = SpaceFieldRouter()
+  private val leaderboard = LeaderboardRouter()
 
   private val routers: List<Router>
-    get() = listOf(this.controller, this.visualizer)
+    get() = listOf(this.controller, this.visualizer, this.leaderboard)
 
   override fun build(): Pair<Controller, Visualizer> {
     return Pair(controller, visualizer)

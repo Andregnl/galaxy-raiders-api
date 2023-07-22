@@ -2,6 +2,7 @@ package galaxyraiders.core.game
 
 import galaxyraiders.core.physics.Point2D
 import galaxyraiders.core.physics.Vector2D
+import kotlin.math.roundToInt
 
 class Asteroid(
   initialPosition: Point2D,
@@ -11,6 +12,6 @@ class Asteroid(
 ) :
   SpaceObject("Asteroid", '.', initialPosition, initialVelocity, radius, mass) {
   fun calculatePoints(): Int {
-    return Math.round(radius * mass) as Int
+    return (radius * mass).roundToInt()
   }
 }
